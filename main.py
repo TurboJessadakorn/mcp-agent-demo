@@ -3,6 +3,7 @@ import asyncio
 from agents import Agent, Runner
 from agents.mcp import MCPServerStdio, MCPServerSse
 from dotenv import load_dotenv
+import os
 
 load_dotenv(override=True)
 
@@ -18,15 +19,29 @@ def connect_sse():
         params={"url": "http://localhost:8080/sse"}
     )
 
+def connect_github():
+    return MCPServerStdio(
+        name="GitHub MCP",
+        params={
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-github"
+            ],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": os.environ.get("GITHUB_TOKEN")
+            }
+        }
+    )
+
 async def agent(message: str):
     print("Connecting to mcp server!")
-    async with connect_sse() as mcp_server:
+    async with connect_github() as mcp_server:
         print("Initializing agent")
         agent = Agent(
             name="Assistant",
             instructions="""
-            You are a math calculator. You need to help user find the sum of 2 number. 
-            However, the method used to find the sum is special. So, you must use the tool to find the answer.
+            You are a Github helper. Your task is to answer user question about GitHub with the information you retieve from the tools.
             """,
             mcp_servers=[mcp_server],
             model="gpt-4o-mini"
@@ -37,10 +52,24 @@ async def agent(message: str):
         return result.final_output
     
 async def run():
-    message = "The number are 3 and 4"
+    message = "Detail of the repo mcp-agent-demo"
     result = await agent(message)
     print(result)
 
+async def main():
+    while True:
+        user_input = input("USER: ")
+        
+        if user_input.lower() in ["exit", "quit", "bye"]:
+            print("Exiting the conversation.")
+            break
+        
+        try:
+            bot_message = await agent(user_input)
+            print(f"AGENT: {bot_message}")
+        except Exception as e:
+            print(f"AGENT: An error occurred: {e}")
+
 
 if __name__ == "__main__":
-    asyncio.run(run())
+    asyncio.run(main())
