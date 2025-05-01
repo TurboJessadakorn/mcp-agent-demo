@@ -1,20 +1,26 @@
 import asyncio
 
 from agents import Agent, Runner
-from agents.mcp import MCPServerStdio
+from agents.mcp import MCPServerStdio, MCPServerSse
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
 def connect_stdio():
     return MCPServerStdio(
-        name="Test Server",
+        name="Stdio Server",
         params={"command": "python", "args": ["server.py"]}
     )
 
+def connect_sse():
+    return MCPServerSse(
+        name="SSE Server",
+        params={"url": "http://localhost:8080/sse"}
+    )
+
 async def agent(message: str):
-    print("Connecting to mcp.run stdio server")
-    async with connect_stdio() as mcp_server:
+    print("Connecting to mcp server!")
+    async with connect_sse() as mcp_server:
         print("Initializing agent")
         agent = Agent(
             name="Assistant",

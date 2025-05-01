@@ -1,6 +1,10 @@
 from fastmcp import FastMCP, Client
 
-mcp = FastMCP(name="My First MCP Server")
+mcp = FastMCP(
+    name="My First MCP Server",
+    port=8080,
+    host="127.0.0.1"
+)
 
 @mcp.tool()
 def sum(a: int, b: int) -> int:
